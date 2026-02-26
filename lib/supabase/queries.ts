@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { getTimeframeRange } from '@/lib/utils/timeframe';
-import type { EventCategory, Timeframe } from '@/lib/types';
+import type { Artist, EventCategory, EventItem, Timeframe, Venue } from '@/lib/types';
 
 type Filters = {
   timeframe: Timeframe;
@@ -9,6 +9,15 @@ type Filters = {
   price?: 'free' | 'paid';
   from?: string;
   to?: string;
+};
+
+type RawEventRecord = Omit<EventItem, 'venue' | 'artist'> & {
+  venue: Venue | Venue[] | null;
+  artist: Artist | Artist[] | null;
+};
+
+type SavedEventRow = {
+  event: RawEventRecord | RawEventRecord[] | null;
 };
 
 const eventSelect = `
@@ -29,6 +38,26 @@ const eventSelect = `
   artist:artists(*)
 `;
 
+function firstOrNull<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function normalizeEvent(record: RawEventRecord): EventItem {
+  const venue = firstOrNull<Venue>(record.venue);
+  const artist = firstOrNull<Artist>(record.artist);
+
+  if (!venue) {
+    throw new Error('Event is missing venue relation');
+  }
+
+  return {
+    ...record,
+    venue,
+    artist
+  } as EventItem;
+}
+
 export async function getEvents(filters: Filters) {
   const supabase = createClient();
   const baseRange = getTimeframeRange(filters.timeframe);
@@ -41,10 +70,11 @@ export async function getEvents(filters: Filters) {
   if (filters.price) query = query.eq('price_type', filters.price);
   const { data, error } = await query;
   if (error) throw error;
-  if (!filters.q) return data;
+  const normalized = ((data ?? []) as RawEventRecord[]).map(normalizeEvent);
+  if (!filters.q) return normalized;
 
   const q = filters.q.toLowerCase();
-  return data.filter((event) => {
+  return normalized.filter((event) => {
     const haystack = [event.title, event.description, event.venue?.name ?? '', event.artist?.name ?? ''].join(' ').toLowerCase();
     return haystack.includes(q);
   });
@@ -64,7 +94,10 @@ export async function getEventById(id: string) {
     .order('start_time', { ascending: true })
     .limit(6);
 
-  return { event: data, related: related ?? [] };
+  return {
+    event: normalizeEvent(data as RawEventRecord),
+    related: ((related ?? []) as RawEventRecord[]).map(normalizeEvent)
+  };
 }
 
 export async function getSavedEvents(userId: string) {
@@ -78,5 +111,8 @@ export async function getSavedEvents(userId: string) {
 
   if (error) throw error;
 
-  return (data ?? []).map((item) => item.event);
+  return ((data ?? []) as SavedEventRow[])
+    .map((item) => firstOrNull(item.event))
+    .filter((event): event is RawEventRecord => Boolean(event))
+    .map((event) => normalizeEvent(event));
 }
