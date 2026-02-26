@@ -5,14 +5,14 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { ArrowRight } from 'lucide-react';
 import type { EventItem } from '@/lib/types';
-import { mapboxToken } from '@/lib/supabase/env';
+import { getMapboxToken } from '@/lib/supabase/env';
 import { useEvents } from '@/lib/queries/hooks';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatEventTime, formatPrice } from '@/lib/utils/event';
 
-mapboxgl.accessToken = mapboxToken;
+mapboxgl.accessToken = getMapboxToken();
 
 export function FullMapView() {
   const mapContainer = useRef<HTMLDivElement | null>(null);

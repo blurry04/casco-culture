@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import type { EventItem } from '@/lib/types';
-import { mapboxToken } from '@/lib/supabase/env';
+import { getMapboxToken } from '@/lib/supabase/env';
 import { Card } from '@/components/ui/card';
 
-mapboxgl.accessToken = mapboxToken;
+mapboxgl.accessToken = getMapboxToken();
 
 export function MiniMap({ events }: { events: EventItem[] }) {
   const mapContainer = useRef<HTMLDivElement | null>(null);
