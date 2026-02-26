@@ -1,0 +1,52 @@
+@import 'mapbox-gl/dist/mapbox-gl.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 220 45% 7%;
+  --foreground: 210 40% 96%;
+  --card: 221 39% 10%;
+  --card-foreground: 210 40% 98%;
+  --primary: 181 85% 46%;
+  --primary-foreground: 220 39% 8%;
+  --secondary: 215 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217 33% 16%;
+  --muted-foreground: 215 20% 71%;
+  --accent: 198 89% 48%;
+  --accent-foreground: 220 39% 8%;
+  --border: 215 28% 20%;
+  --input: 215 28% 20%;
+  --ring: 181 85% 46%;
+  --radius: 1rem;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  background-image: theme('backgroundImage.aura');
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.mapboxgl-popup-content {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border-radius: 12px;
+}
+
+.mapboxgl-ctrl-logo,
+.mapboxgl-ctrl-bottom-right {
+  display: none !important;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  filter: brightness(1.35) saturate(0) invert(0.92);
+  opacity: 0.95;
+  cursor: pointer;
+}
